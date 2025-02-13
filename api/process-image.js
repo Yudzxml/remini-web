@@ -3,15 +3,35 @@ import axios from 'axios';
 import { fromBuffer } from 'file-type';
 import qs from 'qs';
 import multer from 'multer';
+import path from 'path';
 
-const upload = multer({ dest: 'uploads/' });
+// Pastikan folder uploads ada
+const uploadsDir = 'uploads';
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+
+const upload = multer({
+  dest: uploadsDir,
+  fileFilter: (req, file, cb) => {
+    const fileTypes = /jpeg|jpg|png|gif/; // Tipe file yang diizinkan
+    const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = fileTypes.test(file.mimetype);
+
+    if (extname && mimetype) {
+      return cb(null, true);
+    } else {
+      cb('Error: File type not supported!');
+    }
+  }
+});
 
 const tool = ['removebg', 'enhance', 'upscale', 'restore', 'colorize'];
 
 const pxpic = {
   upload: async (filePath) => {
     try {
-      const buffer = fs.readFileSync(filePath);
+      const buffer = await fs.promises.readFile(filePath); // Menggunakan readFile secara asinkron
       const { ext, mime } = (await fromBuffer(buffer)) || {};
       const fileName = Date.now() + "." + ext;
 
@@ -59,7 +79,7 @@ const pxpic = {
       method: 'POST',
       url: 'https://pxpic.com/callAiFunction',
       headers: {
-        'User -Agent': 'Mozilla/5.0 (Android 10; Mobile; rv:131.0) Gecko/131.0 Firefox/131.0',
+        'User-Agent': 'Mozilla/5.0 (Android 10; Mobile; rv:131.0) Gecko/131.0 Firefox/131.0',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8',
         'Content-Type': 'application/x-www-form-urlencoded',
         'accept-language': 'id-ID'
