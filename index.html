@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Pengolah Gambar</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .loader {
+            display: none;
+            border: 4px solid rgba(0, 0, 0, 0.3);
+            border-top: 4px solid blue;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>DOWN4EVER REMINI</h1>
+    <form id="uploadForm">
+        <input type="file" name="image" accept="image/*" required>
+        <select name="tool" required>
+            <option value="">Pilih Tool</option>
+            <option value="removebg">Remove Background</option>
+            <option value="enhance">Enhance</option>
+            <option value="upscale">Upscale</option>
+            <option value="restore">Restore</option>
+            <option value="colorize">Colorize</option>
+        </select>
+        <button type="submit">Proses Gambar</button>
+    </form>
+    <div class="loader" id="loader"></div>
+    <div id="result"></div>
+
+    <footer>
+        <div class="copyright">© 2023 Yudzxml. All rights reserved.</div>
+    </footer>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const loader = document.getElementById('loader');
+
+            // Tampilkan loader
+            loader.style.display = 'block';
+
+            // Mengupload file ke server
+            const response = await fetch('/api/process-image', {
+                method: 'POST',
+                body: formData,
+            });
+
+            // Sembunyikan loader setelah proses selesai
+            loader.style.display = 'none';
+
+            if (!response.ok) {
+                const error = await response.json();
+                document.getElementById('result').innerText = `Error: ${error.message}`;
+                return;
+            }
+
+            const result = await response.json();
+            document.getElementById('result').innerText = JSON.stringify(result);
+        });
+    </script>
+
+    <!-- Tambahkan skrip Rainway -->
+    <script src="rainway.js"></script>
+</body>
+</html>
