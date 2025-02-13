@@ -7,29 +7,34 @@ const tool = ['removebg', 'enhance', 'upscale', 'restore', 'colorize'];
 
 const pxpic = {
   upload: async (filePath) => {
-    const buffer = fs.readFileSync(filePath);
-    const { ext, mime } = (await fromBuffer(buffer)) || {};
-    const fileName = Date.now() + "." + ext;
+    try {
+      const buffer = fs.readFileSync(filePath);
+      const { ext, mime } = (await fromBuffer(buffer)) || {};
+      const fileName = Date.now() + "." + ext;
 
-    const folder = "uploads";
-    const responsej = await axios.post("https://pxpic.com/getSignedUrl", { folder, fileName }, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+      const folder = "uploads";
+      const responsej = await axios.post("https://pxpic.com/getSignedUrl", { folder, fileName }, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-    const { presignedUrl } = responsej.data;
+      const { presignedUrl } = responsej.data;
 
-    await axios.put(presignedUrl, buffer, {
-      headers: {
-        "Content-Type": mime,
-      },
-    });
+      await axios.put(presignedUrl, buffer, {
+        headers: {
+          "Content-Type": mime,
+        },
+      });
 
-    const cdnDomain = "https://files.fotoenhancer.com/uploads/";
-    const sourceFileUrl = cdnDomain + fileName;
+      const cdnDomain = "https://files.fotoenhancer.com/uploads/";
+      const sourceFileUrl = cdnDomain + fileName;
 
-    return sourceFileUrl;
+      return sourceFileUrl;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      throw new Error('File upload failed');
+    }
   },
   create: async (filePath, tools) => {
     if (!tool.includes(tools)) {
@@ -51,7 +56,7 @@ const pxpic = {
       method: 'POST',
       url: 'https://pxpic.com/callAiFunction',
       headers: {
-        'User -Agent': 'Mozilla/5.0 (Android 10; Mobile; rv:131.0) Gecko/131.0 Firefox/131.0',
+        'User-Agent': 'Mozilla/5.0 (Android 10; Mobile; rv:131.0) Gecko/131.0 Firefox/131.0',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8',
         'Content-Type': 'application/x-www-form-urlencoded',
         'accept-language': 'id-ID'
@@ -59,19 +64,30 @@ const pxpic = {
       data: data
     };
 
-    const api = await axios.request(config);
-    return api.data;
+    try {
+      const api = await axios.request(config);
+      return api.data;
+    } catch (error) {
+      console.error('Error calling AI function:', error);
+      throw new Error('AI function call failed');
+    }
   }
 };
 
 export default async (req, res) => {
   if (req.method === 'POST') {
     const { filePath, tool } = req.body;
+
+    // Validasi input
+    if (!filePath || !tool) {
+      return res.status(400).json({ error: 'filePath dan tool harus disediakan' });
+    }
+
     try {
       const result = await pxpic.create(filePath, tool);
       res.status(200).json(result);
     } catch (error) {
-      res.status(500).json({ error: 'Error processing image' });
+      res.status(500).json({ error: error.message || 'Error processing image' });
     }
   } else {
     res.setHeader('Allow', ['POST']);
