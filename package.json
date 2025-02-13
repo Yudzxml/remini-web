@@ -2,14 +2,13 @@
   "name": "my-project",
   "version": "1.0.0",
   "description": "Website Pengolah Gambar",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
-  },
+  "main": "index.html",
+  "type": "module",
+  "scripts": {},
   "dependencies": {
     "axios": "^0.21.1",
     "file-type": "^16.0.0",
-    "multer": "^1.4.2",
+    "multer": "^1.4.4-lts.1",
     "express": "^4.17.1"
   },
   "devDependencies": {},
